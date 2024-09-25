@@ -1,35 +1,119 @@
-import React, {useEffect, useState} from "react";
-import { View, Text } from "react-native";
-import socket from "./socket";
-import Message from "./src/components/Message";
+import React, { useEffect, useState } from "react";
+import { StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native-web";
+import socket from './socket';
 
-export default function App(){
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f4f4f4',
+    padding: 20,
+    justifyContent: 'center'
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  input: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    backgroundColor: "#fff"
+  },
+  button: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+  receivedMessageTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 20,
+    textAlign: 'center'
+  },
+  receivedMessageBody: {
+    fontSize: 16,
+    color: '#333',
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 5,
+    textAlign: 'center'
+  },
+  notReceivedMessageBody: {
+    fontSize: 20,
+    color: 'red',
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 5,
+    textAlign: 'center'
+  }
+});
+
+export default function App() {
+
+  const [room, setRoom] = useState('default');
   const [message, setMessage] = useState('');
+  const [receiveMessage, setReceiveMessage] = useState('');
 
-  useEffect(() => { 
-    socket.on("connect", () =>{
-      console.log("Conectado ao servidor!")
-    });
-    
-    socket.on("message", (msg) => {
-      setMessage(msg)
-    });
-
-    return () => { //encerramento das conexoes, canal e socket
-      socket.off("connect")
-      socket.off("message")
+  const sendMessage = () => {
+    const data = {
+      room,
+      message
     }
-  }, []);
+    socket.emit('send_message', data);
+    setMessage('');
+  };
+
+  useEffect(() => {
+    socket.emit('join_room', room);
+
+    socket.on('receive_message', (msg) => {
+      setReceiveMessage(msg);
+    });
+
+    return () => {
+      socket.off('receive_message');
+    };
+  }, [room]);
 
   return (
-    <View style={{
-      width: '100%',
-      height: '100vh',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
+    <View style={styles.container}>
 
-      <Message></Message>
+      <Text style={styles.title}>Canal: {room}</Text>
+
+      <TextInput
+        placeholder="Digite sua mensagem"
+        value={message}
+        onChangeText={setMessage}
+        style={styles.input}
+      />
+
+      <Pressable
+        style={styles.button}
+        onPress={sendMessage}
+      >
+        <Text style={styles.buttonText}>
+          Envia mensagem
+        </Text>
+      </Pressable>
+      <Text style={styles.receivedMessageTitle}>Mensagem recebida:</Text>
+      <Text style={styles.receivedMessageBody}>
+        {receiveMessage || 
+        <Text style={styles.notReceivedMessageBody}>
+          Nenhuma mensagem recebida
+        </Text> }
+      </Text>
     </View>
   );
 };

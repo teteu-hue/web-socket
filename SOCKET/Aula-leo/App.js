@@ -57,29 +57,57 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     textAlign: 'center'
+  },
+  divider: {
+    width: '100%',
+    height: '2px',
+    backgroundColor: 'black',
+    marginBottom: '10rem',
+    marginTop: '10rem'
   }
 });
 
 export default function App() {
-
-  const [room, setRoom] = useState('default');
+  /** FORMULÁRIO 1 */
   const [message, setMessage] = useState('');
   const [receiveMessage, setReceiveMessage] = useState('');
 
-  const sendMessage = () => {
+  /** FORMULÁRIO 2 */
+  const [message2, setMessage2] = useState('');
+  const [receiveMessage2, setReceiveMessage2] = useState('');
+  
+  const [history, setHistory] = useState([]);
+  const [room, setRoom] = useState('default');
+
+  const sendMessage1 = () => {
     const data = {
       room,
-      message
-    }
+      message : {from: 'user1', message: message}
+    };
+    
     socket.emit('send_message', data);
     setMessage('');
+  };
+
+  const sendMessage2 = () => {
+    const data = {
+      room,
+      message: {from: 'user2', message: message2}
+    };
+
+    socket.emit('send_message', data);
+    setMessage2('');
   };
 
   useEffect(() => {
     socket.emit('join_room', room);
 
     socket.on('receive_message', (msg) => {
-      setReceiveMessage(msg);
+      if(msg.from === 'user1'){
+        setReceiveMessage(msg.message);
+      } else{
+        setReceiveMessage2(msg.message);
+      }
     });
 
     return () => {
@@ -90,30 +118,62 @@ export default function App() {
   return (
     <View style={styles.container}>
 
-      <Text style={styles.title}>Canal: {room}</Text>
+                {/** FORMULÁRIO 1 */}
+      <View>
+        <Text style={styles.title}>Canal: {room}</Text>
 
-      <TextInput
-        placeholder="Digite sua mensagem"
-        value={message}
-        onChangeText={setMessage}
-        style={styles.input}
-      />
+        <TextInput
+          placeholder="Digite sua mensagem"
+          value={message}
+          onChangeText={setMessage}
+          style={styles.input}
+        />
 
-      <Pressable
-        style={styles.button}
-        onPress={sendMessage}
-      >
-        <Text style={styles.buttonText}>
-          Envia mensagem
+        <Pressable
+          style={styles.button}
+          onPress={sendMessage1}
+        >
+          <Text style={styles.buttonText}>
+            Envia mensagem
+          </Text>
+        </Pressable>
+        <Text style={styles.receivedMessageTitle}>Mensagem recebida:</Text>
+        <Text style={styles.receivedMessageBody}>
+          {receiveMessage2 ||
+            <Text style={styles.notReceivedMessageBody}>
+              Nenhuma mensagem recebida
+            </Text>}
         </Text>
-      </Pressable>
-      <Text style={styles.receivedMessageTitle}>Mensagem recebida:</Text>
-      <Text style={styles.receivedMessageBody}>
-        {receiveMessage || 
-        <Text style={styles.notReceivedMessageBody}>
-          Nenhuma mensagem recebida
-        </Text> }
-      </Text>
+      </View>
+      <View style={styles.divider}></View>
+      
+                {/** FORMULÁRIO 2 */}
+      <View>
+        <Text style={styles.title}>Canal: {room}</Text>
+
+        <TextInput
+          placeholder="Digite sua mensagem"
+          value={message2}
+          onChangeText={setMessage2}
+          style={styles.input}
+        />
+
+        <Pressable
+          style={styles.button}
+          onPress={sendMessage2}
+        >
+          <Text style={styles.buttonText}>
+            Envia mensagem
+          </Text>
+        </Pressable>
+        <Text style={styles.receivedMessageTitle}>Mensagem recebida:</Text>
+        <Text style={styles.receivedMessageBody}>
+          {receiveMessage ||
+            <Text style={styles.notReceivedMessageBody}>
+              Nenhuma mensagem recebida
+            </Text>}
+        </Text>
+      </View>
     </View>
   );
 };

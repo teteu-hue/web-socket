@@ -14,17 +14,18 @@ io.on("connection", (socket) =>{
         console.log(`Cliente entrou no canal: ${room}`);
     });
 
+    // Cria um evento send_message.
     socket.on('send_message', ({room, message}) => {
+        // emite a mensagem para o evento 'receive_message'
         io.to(room).emit('receive_message', message);
     });
 
-    socket.emit("message", "Olá do servidor");
-
+    // Cria um evento de disconnect
     socket.on("disconnect", () =>{
         console.log("Um cliente se desconectou");
     });
 });
 
-server.listen(3000, () => {
-    console.log("Servidor rodando na porta 3000")
+server.listen(8080, () => {
+    console.log("Servidor rodando na porta 8080")
 })
